@@ -1,0 +1,205 @@
+version: '3.9'
+services:
+  generate-pfx:
+    image: emberstack/openssl
+    container_name: generate-pfx
+    volumes:
+      - ./certs:/https:rw
+    command: > 
+      sh -c "[ -e "./https/hotel-localhost.pfx" ] && echo File Already exist || (
+              rm -f /https/hotel-localhost.pfx &&
+              openssl genrsa -out hotel-app.rsa 2048 &&
+              openssl req -sha256 -new -key hotel-app.rsa -out hotel-app.csr -subj '/CN=localhost' &&
+              openssl x509 -req -sha256 -days 365 -in hotel-app.csr -signkey hotel-app.rsa -out hotel-app.crt &&
+              openssl pkcs12 -export -out /https/hotel-localhost.pfx -inkey hotel-app.rsa -in hotel-app.crt -password pass:IWhvdGVsLWFwcEBjZXJ0aWZpY2F0ZS1wYXNzd29yZCM= &&
+              rm hotel-app.rsa hotel-app.csr hotel-app.crt)"    
+  
+  seq:
+    image: datalust/seq:latest
+    ports:
+      - 8601:80
+      - 5341:5341
+    environment:
+        ACCEPT_EULA: "Y"
+    networks:
+      - ntw-default-zone
+
+  db-host:
+    build:
+      context: .
+      dockerfile: ./db/Dockerfile
+      args:
+        ACCEPT_EULA: "Y"
+        SA_PASSWORD: "${SQL_SERVER_PASSWORD}"
+        MSSQL_PID: Express
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-U sa", "-P ${SQL_SERVER_PASSWORD}", "-Q", "select 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "${SQL_SERVER_PASSWORD}"
+      MSSQL_PID: Express
+    ports:
+      - 1433:1433
+      - 1434:1434
+    networks:
+      - ntw-db-zone
+
+  rabbitmq:
+    image: rabbitmq:3-management    
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: "hotelbooking"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASS}"
+    networks:
+      - ntw-default-zone
+  
+  redis:
+    image: "redis:alpine"
+    command: redis-server --requirepass $REDIS_PASS
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/var/lib/redis
+      - redis-conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_REPLICATION_MODE=master
+    networks:
+      - ntw-default-zone
+ 
+  search-api-zone-01:
+    build: 
+      context: .
+      dockerfile: ./src/Hotel.Search.Api/Dockerfile
+    restart: always
+    healthcheck:
+      test: curl --fail http://localhost || exit -1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    environment: 
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:80
+    depends_on:
+      - seq
+      - db-host
+      - rabbitmq
+    ports:
+      - 7001:80
+    networks:
+      - ntw-zone-01
+ 
+  search-api-zone-0n:
+    build: 
+      context: .
+      dockerfile: ./src/Hotel.Search.Api/Dockerfile
+    restart: always
+    healthcheck:
+      test: curl --fail http://localhost || exit -1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    environment: 
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:80
+    depends_on:
+      - seq
+      - db-host
+      - rabbitmq
+    ports:
+      - 7002:80
+    networks:
+      - ntw-zone-0n
+
+  booking-api-zone-01:
+    build:  
+      context: .
+      dockerfile: ./src/Hotel.Booking.Api/Dockerfile
+    restart: always
+    healthcheck:
+      test: curl --fail http://localhost || exit -1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    environment: 
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:80
+    depends_on:
+      - seq
+      - db-host
+      - rabbitmq
+    ports:
+      - 7003:80
+    networks:
+      - ntw-zone-01
+
+  booking-api-zone-0n:
+    build:  
+      context: .
+      dockerfile: ./src/Hotel.Booking.Api/Dockerfile
+    restart: always
+    healthcheck:
+      test: curl --fail http://localhost || exit -1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
+    environment: 
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:80
+    depends_on:
+      - seq
+      - db-host
+      - rabbitmq
+    ports:
+      - 7004:80
+    networks:
+      - ntw-zone-0n
+
+  load-balance:
+    build: ./load-balance
+    restart: always
+    healthcheck:
+      test: curl --fail http://localhost00 || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      - seq
+      - db-host
+      - search-api-zone-01
+      - search-api-zone-0n
+      - booking-api-zone-01
+      - booking-api-zone-0n
+    ports:
+      - 8080:80   #Default port
+      - 8043:443
+      - 8082:8601   #seq logger
+    networks:
+      - ntw-zone-01
+      - ntw-zone-0n
+      - ntw-db-zone
+      - ntw-default-zone
+
+networks:
+  ntw-zone-01:
+    driver: bridge
+  ntw-zone-0n:
+    driver: bridge
+  ntw-db-zone:
+    driver: bridge
+  ntw-default-zone:
+    driver: bridge
+
+volumes:
+  redis-data:
+  redis-conf:
