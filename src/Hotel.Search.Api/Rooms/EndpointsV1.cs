@@ -13,7 +13,7 @@ public static class EndpointsV1
   public static RouteGroupBuilder MapRoomsApiV1(this RouteGroupBuilder group)
   {
     group
-      .MapGet("/", ListAvailableRoomsAsync)
+      .MapGet("/rooms", ListAvailableRoomsAsync)
       .WithDescription("Return a list of available rooms")
       .WithSummary("A list of available rooms")
       .Produces<List<RoomViewModel>>(HttpStatusCode.OK.GetHashCode())

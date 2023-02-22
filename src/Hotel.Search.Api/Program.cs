@@ -29,20 +29,18 @@ builder.Services.AddMessagingConsumer(builder.Configuration);
 
 var app = builder.Build();
 
-app.EnsureMigrations();
-
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
   app.UseDeveloperExceptionPage();
-  app.UseSwagger();
-  app.UseSwaggerUI();
 }
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHealthChecks("/");
 
-app.MapGroup("/api/rooms")
+app.MapGroup("/api/search")
     .WithTags("Search.Api")
     .MapRoomsApiV1();
 

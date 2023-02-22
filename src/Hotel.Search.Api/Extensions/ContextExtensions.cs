@@ -11,16 +11,4 @@ public static class ContextExtensions
       => options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
   }
-
-  public static void EnsureMigrations(this IApplicationBuilder app)
-  {
-    if (Environment.GetEnvironmentVariable("xUnit") == "true") return;
-    
-    using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
-    {
-      var context = serviceScope.ServiceProvider.GetService<SearchContext>()!;
-      if (context.Database.GetPendingMigrations().Any())
-        context.Database.Migrate();
-    }
-  }
 }

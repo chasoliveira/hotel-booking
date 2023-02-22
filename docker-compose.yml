@@ -46,7 +46,7 @@ services:
       - 1433:1433
       - 1434:1434
     networks:
-      - ntw-db-zone
+      - ntw-default-zone
 
   rabbitmq:
     image: rabbitmq:3-management    
@@ -93,31 +93,9 @@ services:
     ports:
       - 7001:80
     networks:
-      - ntw-zone-01
+      - ntw-default-zone
  
-  search-api-zone-0n:
-    build: 
-      context: .
-      dockerfile: ./src/Hotel.Search.Api/Dockerfile
-    restart: always
-    healthcheck:
-      test: curl --fail http://localhost || exit -1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 15s
-    environment: 
-      ASPNETCORE_ENVIRONMENT: Docker
-      ASPNETCORE_URLS: http://+:80
-    depends_on:
-      - seq
-      - db-host
-      - rabbitmq
-    ports:
-      - 7002:80
-    networks:
-      - ntw-zone-0n
-
+ 
   booking-api-zone-01:
     build:  
       context: .
@@ -139,30 +117,7 @@ services:
     ports:
       - 7003:80
     networks:
-      - ntw-zone-01
-
-  booking-api-zone-0n:
-    build:  
-      context: .
-      dockerfile: ./src/Hotel.Booking.Api/Dockerfile
-    restart: always
-    healthcheck:
-      test: curl --fail http://localhost || exit -1
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 15s
-    environment: 
-      ASPNETCORE_ENVIRONMENT: Docker
-      ASPNETCORE_URLS: http://+:80
-    depends_on:
-      - seq
-      - db-host
-      - rabbitmq
-    ports:
-      - 7004:80
-    networks:
-      - ntw-zone-0n
+      - ntw-default-zone
 
   load-balance:
     build: ./load-balance
@@ -177,26 +132,15 @@ services:
       - seq
       - db-host
       - search-api-zone-01
-      - search-api-zone-0n
       - booking-api-zone-01
-      - booking-api-zone-0n
     ports:
       - 8080:80   #Default port
       - 8043:443
       - 8082:8601   #seq logger
     networks:
-      - ntw-zone-01
-      - ntw-zone-0n
-      - ntw-db-zone
       - ntw-default-zone
 
 networks:
-  ntw-zone-01:
-    driver: bridge
-  ntw-zone-0n:
-    driver: bridge
-  ntw-db-zone:
-    driver: bridge
   ntw-default-zone:
     driver: bridge
 

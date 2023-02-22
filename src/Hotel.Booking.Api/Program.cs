@@ -30,16 +30,14 @@ builder.Services.AddMessaging(builder.Configuration);
 
 var app = builder.Build();
 
-app.EnsureMigrations();
-
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
   app.UseDeveloperExceptionPage();
-  app.UseSwagger();
-  app.UseSwaggerUI();
 }
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHealthChecks("/");
 

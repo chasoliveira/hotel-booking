@@ -93,7 +93,7 @@ docker-compose up -d
 ```
 
 
-For local puporse all the environment going to be simulate, by containers with segmented networks.
+For local puporse all the environment going to be simulate by containers.
 - LoadBalance: NGINX
 - Observability: Datalust/SEQ going to provide the logs and monitoring
 - Database: SQL Server, each one per microservice
@@ -119,3 +119,11 @@ dotnet ef database update
 As this POC has no Authentication/Authorization other security concerns were postponed for the future. Even so, a step was added in the `docker-compose` to create local certifications and keys. In absence of vault service a `.ENV` was created to store the passwords and inject automatically in the compose, however, the microservices are still reading it from `appSettings`
 
 For purposes of the POC the `docker-compose` create at least two services of each microservice to simulate multi instances and provide high availability. 
+
+### Swagger Pages
+
+![Booking API](./docs/booking_swagger.png)
+
+---
+
+![Search API](./docs/search_swagger.png)
