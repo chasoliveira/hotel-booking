@@ -13,6 +13,7 @@ public class RoomsAvailableValidator : AbstractValidator<AvailableRoomsQuery>
     RuleFor(b => b.StartAt)
         .NotNull()
         .NotEqual(DateTime.MinValue)
+        .GreaterThan(DateTime.Now)
         .LessThanOrEqualTo(DateTime.Now.Date.AddDays(MAX_DAY_IN_ADVANCE).SetLastHourOfTheDay());
 
     RuleFor(b => b.EndAt)
