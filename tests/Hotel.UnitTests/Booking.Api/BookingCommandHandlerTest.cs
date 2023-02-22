@@ -5,6 +5,7 @@ using Hotel.Booking.Api.Bookings;
 using Hotel.Booking.Api.Bookings.Commands;
 using Hotel.Booking.Api.Contexts;
 using Hotel.Common.Messaging;
+using Hotel.Common.Messaging.Events;
 using Hotel.Common.Notifications;
 using Microsoft.EntityFrameworkCore;
 using Moq;
@@ -46,7 +47,7 @@ public class BookingCommandHandlerTest
     (await ctx.Bookings.AnyAsync(b => b.Id == bookingId)).Should().BeTrue();
 
     notification.Verify(n => n.Add(It.IsAny<Notification>()), Times.Never);
-    messageBus.Verify(n => n.PublishAsync(It.IsAny<NewBookingEvent>(), default), Times.Once);
+    messageBus.Verify(n => n.PublishAsync(It.IsAny<AddedEvent>(), default), Times.Once);
   }
 
   [Fact]
@@ -65,7 +66,7 @@ public class BookingCommandHandlerTest
     success.Should().BeFalse();
     bookingId.Should().BeNull();
     notification.Verify(n => n.Add(It.Is<Notification>(v => v.Message.Contains(messageError))), Times.Once);
-    messageBus.Verify(n => n.PublishAsync(It.IsAny<NewBookingEvent>(), default), Times.Never);
+    messageBus.Verify(n => n.PublishAsync(It.IsAny<AddedEvent>(), default), Times.Never);
   }
 
   [Fact]
@@ -84,6 +85,6 @@ public class BookingCommandHandlerTest
     success.Should().BeFalse();
     bookingId.Should().BeNull();
     notification.Verify(n => n.Add(It.Is<Notification>(v => v.Message.Contains(messageError))), Times.Once);
-    messageBus.Verify(n => n.PublishAsync(It.IsAny<NewBookingEvent>(), default), Times.Never);
+    messageBus.Verify(n => n.PublishAsync(It.IsAny<AddedEvent>(), default), Times.Never);
   }
 }

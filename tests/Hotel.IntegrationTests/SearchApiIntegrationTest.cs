@@ -2,6 +2,7 @@ using Hotel.Search.Api;
 using Hotel.Search.Api.Contexts;
 using Hotel.Search.Api.Contexts.Entities;
 using Hotel.Search.Api.Rooms;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Hotel.IntegrationTests;
 
@@ -26,6 +27,10 @@ public class SearchApiIntegrationTest : IClassFixture<TestWebApplicationFactory<
     //Arrange
     var client = _factory.CreateClient();
     var (startAt, endAt) = GetPatameter();
+    using var scope = _factory.Server.Services.CreateScope();
+    var ctx = scope.ServiceProvider.GetRequiredService<SearchContext>();
+    ctx.Rooms.RemoveRange(ctx.Rooms.ToList());
+    await ctx.SaveChangesAsync();
 
     //Act
     var response = await client.GetFromJsonAsync<IEnumerable<RoomViewModel>>($"/api/search/rooms?startAt={startAt}&endAt={endAt}");
