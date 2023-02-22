@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text;
 using System.Text.Json;
 using Hotel.Common.Notifications;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -11,9 +12,12 @@ namespace Hotel.Booking.Api.Bookings;
 public class AfterEndpointExecution : IEndpointFilter
 {
   private readonly INotificationContext notification;
-  public AfterEndpointExecution(INotificationContext notification)
+  private readonly ILogger<AfterEndpointExecution> logger;
+
+  public AfterEndpointExecution(INotificationContext notification, ILogger<AfterEndpointExecution> logger)
   {
     this.notification = notification;
+    this.logger = logger;
   }
 
   public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
@@ -30,8 +34,9 @@ public class AfterEndpointExecution : IEndpointFilter
         Detail = JsonSerializer.Serialize(notification.ReadOnlyList().Select(n => n.Message).ToList()),
         Instance = context.HttpContext.Request.Path
       };
+      logger.LogInformation("A bad request was made with the following resoppnse: {Response}", problemDetails);
 
-      return Results.Problem(problemDetails);
+      return Results.Json(problemDetails);
     }
     return result;
   }

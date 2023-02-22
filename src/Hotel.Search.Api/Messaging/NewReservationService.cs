@@ -8,6 +8,8 @@ namespace Hotel.Search.Api.Messaging;
 
 public record NewReservationEvent: AddedEvent
 {
+  public NewReservationEvent(AddedEvent original) : base(original)
+  {  }
   public NewReservationEvent(int Id, int RoomId, string RoomDescription, string UserName, DateTime StartAt, DateTime EndAt) 
     : base(Id, RoomId, RoomDescription, UserName, StartAt, EndAt)  {  }
 
@@ -17,21 +19,21 @@ public record NewReservationEvent: AddedEvent
     => new Reservation { ReferenceId = item.Id, ReferenceRoomId = item.RoomId, UserName = item.UserName, StartAt = item.StartAt, EndAt = item.EndAt };
 }
 
-public class NewReservationService : BaseBackgroundService<NewReservationEvent>
+public class NewReservationService : BaseBackgroundService<AddedEvent>
 {
   public NewReservationService(IMessageBus bus, IServiceProvider sp) : base(bus, sp) { }
 
-  protected override async Task ProcessEventAsync(NewReservationEvent item)
+  protected override async Task ProcessEventAsync(AddedEvent item)
   {
     if (item is null) return;
 
     using var serviceScope = serviceProvider.CreateScope();
     var context = serviceScope.ServiceProvider.GetService<SearchContext>()!;
 
-    Reservation reservervation = item;
+    Reservation reservervation = new NewReservationEvent(item);
     var existingRoom = await context.Rooms.FirstOrDefaultAsync(r => r.Id == item.RoomId);
 
-    reservervation.Room = existingRoom ?? item;
+    reservervation.Room = existingRoom ?? new NewReservationEvent(item);
 
     await context.Reservations.AddAsync(reservervation);
 

@@ -9,11 +9,11 @@ public record DeletedReservationEvent : DeletedEvent
 {
   public DeletedReservationEvent(int Id) : base(Id) { }
 }
-public class DeletedReservationService : BaseBackgroundService<DeletedReservationEvent>
+public class DeletedReservationService : BaseBackgroundService<DeletedEvent>
 {
   public DeletedReservationService(IMessageBus bus, IServiceProvider sp) : base(bus, sp) { }
   
-  protected override async Task ProcessEventAsync(DeletedReservationEvent item)
+  protected override async Task ProcessEventAsync(DeletedEvent item)
   {
     if (item is null) return;
     using var serviceScope = serviceProvider.CreateScope();

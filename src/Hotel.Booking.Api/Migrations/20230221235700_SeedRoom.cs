@@ -13,7 +13,7 @@ namespace Hotel.Booking.Api.Migrations
             migrationBuilder.InsertData(
                 table: "Rooms",
                 columns: new[] { "Id", "Description" },
-                values: new object[] { -1, "An awesome room for your vacation" });
+                values: new object[] { 1, "An awesome room for your vacation" });
         }
 
         /// <inheritdoc />
@@ -22,7 +22,7 @@ namespace Hotel.Booking.Api.Migrations
             migrationBuilder.DeleteData(
                 table: "Rooms",
                 keyColumn: "Id",
-                keyValue: -1);
+                keyValue: 1);
         }
     }
 }

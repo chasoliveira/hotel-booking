@@ -87,7 +87,7 @@ namespace Hotel.Search.Api.Migrations
                     b.HasData(
                         new
                         {
-                            Id = -1,
+                            Id = 1,
                             Description = "An awesome room for your vacation",
                             ReferenceId = 1
                         });

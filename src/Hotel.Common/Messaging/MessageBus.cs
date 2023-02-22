@@ -7,12 +7,16 @@ using System.Buffers;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics.CodeAnalysis;
 using Hotel.Common.Messaging.Events;
+using Microsoft.Extensions.Logging;
 
 namespace Hotel.Common.Messaging;
 
 public interface IMessageBus : IDisposable
 {
-  AwaitableDisposable<SubscriptionResult> SubscribeAsync<T>(string subscriptionId, Func<T, Task> onMessage, CancellationToken token = default) where T : class;
+  public AwaitableDisposable<SubscriptionResult> SubscribeAsync<T>(
+    string subscriptionId,
+    Func<T, Task> onMessage,
+    CancellationToken token = default) where T : class;
   Task PublishAsync<T>(T message, CancellationToken token = default) where T : BaseEventMessage;
 }
 
@@ -22,27 +26,32 @@ public class MessageBus : IMessageBus
   private IBus _bus;
   private IAdvancedBus _advancedBus;
   private readonly string? _connectionString;
-  public MessageBus(IConfiguration configuration)
+  private readonly ILogger<MessageBus> logger;
+
+  public MessageBus(IConfiguration configuration, ILogger<MessageBus> logger)
   {
     _connectionString = configuration.GetConnectionString("MessageBus");
     HotelException.ThrowIfNullOrEmpty(_connectionString);
     TryConnect();
+    this.logger = logger;
   }
   public bool IsConnected => _bus?.Advanced.IsConnected ?? false;
-  
+
   public AwaitableDisposable<SubscriptionResult> SubscribeAsync<T>(
     string subscriptionId,
     Func<T, Task> onMessage,
     CancellationToken token = default) where T : class
   {
     TryConnect();
-    return _bus.PubSub.SubscribeAsync(subscriptionId, onMessage);
+    logger.LogInformation($"[MessaBus] - New Subscription to '{typeof(T).Name}'");
+    return _bus.PubSub.SubscribeAsync(subscriptionId, onMessage, token);
   }
 
   public async Task PublishAsync<T>(T message, CancellationToken token = default) where T : BaseEventMessage
   {
     TryConnect();
-    await _bus.PubSub.PublishAsync(message, token);
+    await _bus.PubSub.PublishAsync(message, message.MessageType, token);
+    logger.LogInformation($"[MessaBus] - New message published to '{typeof(T).Name}'");
   }
 
   private void TryConnect()

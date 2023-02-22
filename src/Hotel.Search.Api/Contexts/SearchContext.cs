@@ -14,7 +14,7 @@ public class SearchContext : DbContext
 
   protected override void OnModelCreating(ModelBuilder modelBuilder)
   {
-    modelBuilder.Entity<Entities.Room>().HasData(new Entities.Room() { Id = -1, ReferenceId = 1, Description = "An awesome room for your vacation" });
+    modelBuilder.Entity<Entities.Room>().HasData(new Entities.Room() { Id = 1, ReferenceId = 1, Description = "An awesome room for your vacation" });
     base.OnModelCreating(modelBuilder);
   }
 }

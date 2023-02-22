@@ -5,16 +5,12 @@ using Hotel.Common.Messaging.Events;
 
 namespace Hotel.Search.Api.Messaging;
 
-public record ConfirmedReservationEvent : ConfirmedEvent
-{
-  public ConfirmedReservationEvent(int Id) : base(Id) { }
-}
 
-public class ConfirmedReservationService : BaseBackgroundService<ConfirmedReservationEvent>
+public class ConfirmedReservationService : BaseBackgroundService<ConfirmedEvent>
 {
   public ConfirmedReservationService(IMessageBus bus, IServiceProvider sp) : base(bus, sp) { }
 
-  protected override async Task ProcessEventAsync(ConfirmedReservationEvent item)
+  protected override async Task ProcessEventAsync(ConfirmedEvent item)
   {
     if (item is null) return;
     using var serviceScope = serviceProvider.CreateScope();

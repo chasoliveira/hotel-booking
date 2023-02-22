@@ -24,7 +24,8 @@ public abstract class BaseBackgroundService<TEvent> : BackgroundService where TE
   private async Task ProcessAndClearCacheAsync(TEvent arg)
   {
     await ProcessEventAsync(arg);
-    var cache = serviceProvider.GetService<ICacheManagement>();
+    using var serviceScope = serviceProvider.CreateScope();
+    var cache = serviceScope.ServiceProvider.GetRequiredService<ICacheManagement>();
     if (cache is null) return;
 
     await cache.RemoveAsync(AvailableRoomsQuery.CacheKey, default);

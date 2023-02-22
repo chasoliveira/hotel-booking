@@ -4,17 +4,12 @@ using Hotel.Common.Messaging.Events;
 using Hotel.Common.Messaging;
 
 namespace Hotel.Search.Api.Messaging;
-public record ModifiedReservationEvent : UpdatedEvent
-{
-  public ModifiedReservationEvent(int Id, DateTime StartAt, DateTime EndAt)
-    : base(Id, StartAt, EndAt) { }
-}
 
-public class ModifiedReservationService : BaseBackgroundService<ModifiedReservationEvent>
+public class ModifiedReservationService : BaseBackgroundService<UpdatedEvent>
 {
   public ModifiedReservationService(IMessageBus bus, IServiceProvider sp) : base(bus, sp) { }
 
-  protected override async Task ProcessEventAsync(ModifiedReservationEvent item)
+  protected override async Task ProcessEventAsync(UpdatedEvent item)
   {
     if (item is null) return;
 

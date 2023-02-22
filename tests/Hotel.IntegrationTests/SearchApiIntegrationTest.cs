@@ -28,7 +28,7 @@ public class SearchApiIntegrationTest : IClassFixture<TestWebApplicationFactory<
     var (startAt, endAt) = GetPatameter();
 
     //Act
-    var response = await client.GetFromJsonAsync<IEnumerable<RoomViewModel>>($"/api/rooms?startAt={startAt}&endAt={endAt}");
+    var response = await client.GetFromJsonAsync<IEnumerable<RoomViewModel>>($"/api/search/rooms?startAt={startAt}&endAt={endAt}");
 
     //Assert
     response.Should().NotBeNull();
@@ -54,7 +54,7 @@ public class SearchApiIntegrationTest : IClassFixture<TestWebApplicationFactory<
     var (startAt, endAt) = GetPatameter();
 
     //Act
-    var response = await client.GetFromJsonAsync<IEnumerable<RoomViewModel>>($"/api/rooms/?startAt={startAt}&endAt={endAt}");
+    var response = await client.GetFromJsonAsync<IEnumerable<RoomViewModel>>($"/api/search/rooms/?startAt={startAt}&endAt={endAt}");
 
     //Assert
     response.Should().NotBeNull();

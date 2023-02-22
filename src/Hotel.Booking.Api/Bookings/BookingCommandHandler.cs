@@ -2,6 +2,7 @@ using FluentValidation;
 using Hotel.Booking.Api.Bookings.Commands;
 using Hotel.Booking.Api.Contexts;
 using Hotel.Common.Messaging;
+using Hotel.Common.Messaging.Events;
 using Hotel.Common.Notifications;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -41,7 +42,8 @@ public class BookingCommandHandler :
     context.Add(newBooking);
     await context.SaveChangesAsync(token);
 
-    await bus.PublishAsync<NewBookingEvent>(newBooking, token);
+    NewBookingEvent message = newBooking;
+    await bus.PublishAsync<AddedEvent>(message, token);
 
     return (true, newBooking.Id);
   }
@@ -54,7 +56,7 @@ public class BookingCommandHandler :
     notification.Add(new Notification($"The room '{id}' is not valid!"));
     return null;
   }
-  
+
   private bool IsValid(NewBookingCommand request)
   {
     var validator = serviceProvider.GetService<IValidator<NewBookingCommand>>()!;
@@ -89,7 +91,7 @@ public class BookingCommandHandler :
     await context.SaveChangesAsync(token);
 
     UpdateBookingEvent message = booking;
-    await bus.PublishAsync(message, token);
+    await bus.PublishAsync<UpdatedEvent>(message, token);
 
     return true;
   }
@@ -106,7 +108,7 @@ public class BookingCommandHandler :
     booking.IsCanceled = true;
     await context.SaveChangesAsync(token);
 
-    await bus.PublishAsync(new CancelBookingEvent(request.Id), token);
+    await bus.PublishAsync(new CanceledEvent(request.Id), token);
 
     return true;
   }
@@ -123,7 +125,7 @@ public class BookingCommandHandler :
     booking.IsConfirmed = true;
     await context.SaveChangesAsync(token);
 
-    await bus.PublishAsync(new CancelBookingEvent(request.Id), token);
+    await bus.PublishAsync(new ConfirmedEvent(request.Id), token);
 
     return true;
   }
@@ -140,7 +142,7 @@ public class BookingCommandHandler :
     context.Remove(booking);
     await context.SaveChangesAsync(token);
 
-    await bus.PublishAsync(new DeleteBookingEvent(request.Id), token);
+    await bus.PublishAsync(new DeletedEvent(request.Id), token);
 
     return true;
   }

@@ -39,18 +39,36 @@ public class AvailableRoomsHandler : IRequestHandler<AvailableRoomsQuery, IEnume
                      .ToListAsync();
 
     var groupedResult = GetGroupedResult(request, queryResult);
+    
+    if (!queryResult.Any())
+      groupedResult = await GetRoomsAsync(request);
 
-    if (groupedResult != null && groupedResult.Any())
-      await _cache.SetAsync(AvailableRoomsQuery.CacheKey, groupedResult, cancelToken);
+    await CacheAndReturnAsync(groupedResult, cancelToken);
 
     return groupedResult!;
   }
 
-  private static List<RoomViewModel> GetGroupedResult(AvailableRoomsQuery request, List<ReservedProjection> query)
+  private async Task CacheAndReturnAsync(IEnumerable<RoomViewModel> groupedResult, CancellationToken cancelToken)
   {
-    return query.GroupBy(g => new GroupedRooms(g.Id, g.Description))
+    if (groupedResult != null && groupedResult.Any())
+      await _cache.SetAsync(AvailableRoomsQuery.CacheKey, groupedResult, cancelToken);
+  }
+
+  private async Task<IEnumerable<RoomViewModel>> GetRoomsAsync(AvailableRoomsQuery request)
+  {
+    var rooms = await _context.Rooms.ToListAsync();
+    return rooms.GroupBy(g => new GroupedRooms(g.Id, g.Description))
+    .Select(s => new RoomViewModel(s.Key.Id, s.Key.Description, request.NextThirtyDays.Where(d => d <= request.EndAt)
+                              .Select(d => new AvailableDayViewModel(d))));
+  }
+
+  private static IEnumerable<RoomViewModel> GetGroupedResult(AvailableRoomsQuery request, List<ReservedProjection> query)
+  {
+    var grouped = query.GroupBy(g => new GroupedRooms(g.Id, g.Description))
                  .Select(s => new RoomViewModel(s.Key.Id, s.Key.Description, GetAvaiablesDays(request, s)))
                  .ToList();
+
+    return grouped;
   }
 
   private static IEnumerable<AvailableDayViewModel> GetAvaiablesDays(
@@ -61,7 +79,7 @@ public class AvailableRoomsHandler : IRequestHandler<AvailableRoomsQuery, IEnume
         .SelectMany(sg => Enumerable.Range(0, sg.TotalDays)
         .Select(days => sg.StartAt.AddDays(days).Date));
 
-    return request.NextThirtyDays.Except(expandedDays)
+    return request.NextThirtyDays.Where(d => d <= request.EndAt).Except(expandedDays)
                                 .Select(d => new AvailableDayViewModel(d));
   }
 }

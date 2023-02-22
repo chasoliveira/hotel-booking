@@ -5,16 +5,11 @@ using Hotel.Common.Messaging.Events;
 
 namespace Hotel.Search.Api.Messaging;
 
-public record CanceledReservationEvent : CanceledEvent
-{
-  public CanceledReservationEvent(int Id) : base(Id)  {  }
-}
-
-public class CanceledReservationService : BaseBackgroundService<CanceledReservationEvent>
+public class CanceledReservationService : BaseBackgroundService<CanceledEvent>
 {
   public CanceledReservationService(IMessageBus bus, IServiceProvider sp) : base(bus, sp) { }
 
-  protected override async Task ProcessEventAsync(CanceledReservationEvent item)
+  protected override async Task ProcessEventAsync(CanceledEvent item)
   {
     if (item is null) return;
     using var serviceScope = serviceProvider.CreateScope();
