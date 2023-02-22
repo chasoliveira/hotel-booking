@@ -127,3 +127,7 @@ For purposes of the POC the `docker-compose` create at least two services of eac
 ---
 
 ![Search API](./docs/search_swagger.png)
+
+# Know Issue
+
+- The `nginx` is not working properly;

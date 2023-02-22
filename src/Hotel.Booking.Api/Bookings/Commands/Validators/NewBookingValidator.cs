@@ -27,9 +27,3 @@ public class NewBookingValidator : AbstractValidator<NewBookingCommand>
         .WithMessage("'End At' must to exceed three days.");
   }
 }
-
-public static class DateTimeExtensions
-{
-  public static DateTime SetLastHourOfTheDay(this DateTime dateTime)
-    => dateTime.Date.AddDays(1).AddSeconds(-1);
-}
